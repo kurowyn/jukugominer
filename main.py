@@ -1,46 +1,44 @@
-import os, time
-os.system('mode 80, 10')
-KANA = """あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽどゅゃょッアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポョュャっ"""
-NUMBERS = '0123456789'
-JPNUMBERS = "０１２３４５６７８９"
-ENNALPHACHARS = """~!@#$%^&*()_+:"|<>?;'\,./-""" # NALPHA: non-alphabetic (for example, 'a' is alphabetic, but ; is not.)
-JPNALPHACHARS = """～～＠＃＄％＾＆＊（）＿＋｛｝：”｜＜＞？「」；’￥、。・/*-—.…"""
-ENNUMS = '0123456789'
-JPNUMS = "０１２３４５６７８９"
-nonAlphabeticCharacters = ENNALPHACHARS + JPNALPHACHARS + ENNUMS +  JPNUMS
-jukugoList = []
+import sys
 
-while(True):
-    while(True):
-        jpFileName = str(input("JP Text File: "))
-        if(jpFileName[len(jpFileName) - 4:len(jpFileName)] == '.txt'):
-            break
-        elif(jpFileName == "EXIT"):
-            print("Closing...")
-            exit()
-        else:
-            print("Please make sure to include the file's extension (.txt for text files, etc.)!")
-            os.system('pause')
-            os.system('cls')
-    with open(jpFileName, 'r', encoding='utf8') as jpFile:
-        jpFileContentsString = ' '.join((' '.join(jpFile.readlines())).splitlines()) # turn file's text into one line
-    for i in range(len(jpFileContentsString)):
-        if(jpFileContentsString[i] in nonAlphabeticCharacters or jpFileContentsString[i] in KANA):
-            jpFileContentsString = jpFileContentsString.replace(jpFileContentsString[i], ' ')    
-    jukugoList = [jukugo for jukugo in (jpFileContentsString.replace(' ', '\n')).splitlines() if jukugo != '']
-    while(True):
-        jukugoFileName = str(input("Mined Jukugo File Name: "))
-        if(jukugoFileName[len(jukugoFileName) - 4:len(jukugoFileName)] == '.txt'):
-            break
-        else:
-            print("Please make sure to include the file's extension (.txt for text files, etc.)!")
-            os.system('pause')
-            os.system('cls')    
-    print(f'Creating {jukugoFileName} file...')
-    time.sleep(2)
-    with open(jukugoFileName, 'w', encoding='utf8') as jukugoFile:
-        for i in range(len(jukugoList)):
-            jukugoFile.write(jukugoList[i] + '\n')
-    print(f"Successfully created {jukugoFileName}.")
-    os.system('pause')
-    os.system('cls')
+HIRAGANA = ('あいうえおぁぃぅぇぉゔかきくけこさしすせそたちつてとっなにぬねのんはひふへほまみ' 
+		   'むむめもやゆよゃゅょらりるれろわゐゑをがぎぐげござじじずぜぞだぢぢづでどばびぶべぼ'
+		   'ぱぴぷぺぽぽーゝゞ、。')
+KATAKANA = ('アイウエオァィゥェォォヴカキクケコサシスセソタチツツテトッナニヌネノンハヒフヘホマ' 
+		   'ミムメモヤユヨャュョラリルレロワヰヱヲガギグゲゴザザジズゼゾダヂヅデドバビブベボパ' 
+		   'ピプペポ・ーヽヾ、。ヴッン')
+JP_NUMS = '１２３４５６７８９０'
+NUMS = '1234567890'
+
+def parse_jukugo(jp_lines):
+	jukugo = jp_lines
+	for letter in jp_lines:
+		if letter in HIRAGANA + KATAKANA + JP_NUMS + NUMS:
+			jukugo = jukugo.replace(letter, ' ', 1)
+	jukugo = jukugo.split()
+	return jukugo
+
+# Basically, we need a function that finds Kanji Jukugo.	
+# Jukugo are everything but:
+# Hiragana
+# Katakana
+# JP-Punctuations
+# EN-Punctuations
+# JP-Nums 
+# EN-Nums
+# ...and so on.
+			
+if len(sys.argv) != 2:
+	print('usage: python jukugo_finder {filename}')
+	exit(1)
+
+filename = sys.argv[1]
+
+try:
+	with open(filename, encoding = 'utf8') as f:
+		lines = ''.join(f.readlines())
+		jukugo = parse_jukugo(lines)
+		with open('jukugo_file', encoding = 'utf8', mode = 'w') as jukugo_f:
+			print(*jukugo, sep = '\n', end = '', file = jukugo_f)
+except:
+	print(f'ERR: no such file {filename}. Exiting.')
+	exit(1)
